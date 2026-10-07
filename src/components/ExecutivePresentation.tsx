@@ -150,12 +150,13 @@ const indicators = [
 export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: ExecutivePresentationProps) {
   const [activeStep, setActiveStep] = useState(journey[0])
   const [activeScenario, setActiveScenario] = useState(scenarios[0])
+  const activeStepDiagramId = activeStep.diagramId
 
   return (
     <section className="executive-page">
       <div className="executive-hero">
         <div className="executive-hero-copy">
-          <span className="eyebrow">Vista gerencial · Base estable v1.0</span>
+          <span className="eyebrow">Vista general · Base estable v1.0</span>
           <h1>Gestión integral de licencias STEJENP</h1>
           <p>
             Lectura compacta del procedimiento para entender responsabilidades, controles, escenarios operativos y puntos de decisión desde el inicio.
@@ -214,7 +215,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
               <p>{activeStep.description}</p>
               <div className="decision-box"><ListChecks size={17} /><div><strong>Decisión clave</strong><span>{activeStep.decision}</span></div></div>
               <div className="decision-box"><FileCheck2 size={17} /><div><strong>Salida esperada</strong><span>{activeStep.output}</span></div></div>
-              {activeStep.diagramId && <button className="link-action" onClick={() => onOpenDiagram(activeStep.diagramId)}>Abrir detalle BPMN <ArrowRight size={15} /></button>}
+              {activeStepDiagramId && <button className="link-action" onClick={() => onOpenDiagram(activeStepDiagramId)}>Abrir detalle BPMN <ArrowRight size={15} /></button>}
             </div>
           </div>
         </article>
@@ -223,7 +224,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           <div className="executive-card-heading">
             <Layers3 size={20} />
             <div>
-              <h2>Escenarios operativos en lenguaje simple</h2>
+              <h2>Escenarios operativos</h2>
             </div>
           </div>
           <div className="scenario-tabs">
@@ -235,7 +236,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
               <strong>{activeScenario.trigger}</strong>
             </div>
             <div>
-              <span>Resumen</span>
+              <span>Detalle</span>
               <p>{activeScenario.executiveMessage}</p>
             </div>
             <div>
