@@ -4,13 +4,14 @@ import {
   Workflow, X, CheckCircle2, Database, UsersRound,
 } from 'lucide-react'
 import { BpmnViewer } from './components/BpmnViewer'
+import { ExecutivePresentation } from './components/ExecutivePresentation'
 import { DetailPanel } from './components/DetailPanel'
 import { Sidebar } from './components/Sidebar'
 import { bpmnSources, optimizeBpmnForViewer, parseBpmn, sanitizeBpmnXml, type BpmnNode } from './lib-bpmn'
 import { diagrams, levelLabels, type DiagramDefinition } from './data/catalog'
 import { pendingScenarios, procedure } from './data/procedure'
 
-type ViewMode = 'flow' | 'overview' | 'pending'
+type ViewMode = 'executive' | 'flow' | 'overview' | 'pending'
 
 type SearchHit = {
   diagram: DiagramDefinition
@@ -31,7 +32,7 @@ function App() {
   const [activeId, setActiveId] = useState('n0')
   const [selectedNodeId, setSelectedNodeId] = useState<string>()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [mode, setMode] = useState<ViewMode>('flow')
+  const [mode, setMode] = useState<ViewMode>('executive')
   const [query, setQuery] = useState('')
   const [history, setHistory] = useState<string[]>([])
 
@@ -115,7 +116,7 @@ function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <button className="icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Abrir navegación">
+        <button className="icon-button mobile-menu" onClick={() => { setMode('flow'); setSidebarOpen(true) }} aria-label="Abrir navegación">
           <Menu size={20} />
         </button>
         <div className="identity">
@@ -127,8 +128,9 @@ function App() {
         </div>
 
         <div className="top-tabs" role="tablist">
-          <button className={mode === 'flow' ? 'active' : ''} onClick={() => setMode('flow')}><Workflow size={16} /> Flujo</button>
-          <button className={mode === 'overview' ? 'active' : ''} onClick={() => setMode('overview')}><Boxes size={16} /> Resumen</button>
+          <button className={mode === 'executive' ? 'active' : ''} onClick={() => setMode('executive')}><ShieldCheck size={16} /> Gerencial</button>
+          <button className={mode === 'flow' ? 'active' : ''} onClick={() => setMode('flow')}><Workflow size={16} /> BPMN operativo</button>
+          <button className={mode === 'overview' ? 'active' : ''} onClick={() => setMode('overview')}><Boxes size={16} /> Mapa</button>
           <button className={mode === 'pending' ? 'active' : ''} onClick={() => setMode('pending')}><AlertTriangle size={16} /> Por formalizar</button>
         </div>
 
@@ -152,11 +154,16 @@ function App() {
         </div>
       </header>
 
-      <div className="workspace">
-        <Sidebar activeId={activeId} onSelect={(id) => navigate(id)} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        {sidebarOpen && <div className="sidebar-scrim" onClick={() => setSidebarOpen(false)} />}
+      <div className={`workspace ${mode !== 'flow' ? 'workspace-executive' : ''}`}>
+        {mode === 'flow' && (
+          <Sidebar activeId={activeId} onSelect={(id) => navigate(id)} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        )}
+        {sidebarOpen && mode === 'flow' && <div className="sidebar-scrim" onClick={() => setSidebarOpen(false)} />}
 
         <main className="main-content">
+          {mode === 'executive' && (
+            <ExecutivePresentation onOpenDiagram={(id) => navigate(id, false)} onOpenPending={() => setMode('pending')} />
+          )}
           {mode === 'flow' && (
             <>
               <section className="diagram-header">
