@@ -85,6 +85,92 @@ export function sanitizeBpmnXml(xml: string): string {
   }
 }
 
+/**
+ * Anchuras expresadas en unidades BPMN, NO píxeles de pantalla.
+ * Participante (padre) y carril (hijo) ocupan columnas independientes.
+ * Los nombres se renderizan mediante overlays HTML con texto horizontal.
+ */
+export const SWIMLANE_LAYOUT = {
+  participantHeaderWidth: 144,
+  laneHeaderWidth: 166,
+} as const
+
+export function optimizeBpmnForViewer(xml: string): string {
+  try {
+    const sanitized = sanitizeBpmnXml(xml)
+    const doc = new DOMParser().parseFromString(sanitized, 'application/xml')
+    if (doc.querySelector('parsererror')) return sanitized
+
+    const { participantHeaderWidth, laneHeaderWidth } = SWIMLANE_LAYOUT
+    const contentOffset = participantHeaderWidth + laneHeaderWidth
+
+    // Evitamos la rotación BPMN estándar: las cabeceras se dibujan como
+    // overlays HTML en columnas independientes usando los nombres originales.
+    const allParticipants = Array.from(doc.getElementsByTagNameNS('*', 'participant'))
+    const namedParticipants = new Set(
+      allParticipants.filter((p) => (p.getAttribute('name') ?? '').trim()).map((p) => p.getAttribute('id')),
+    )
+    const laneIds = new Set(
+      Array.from(doc.getElementsByTagNameNS('*', 'lane')).map((lane) => lane.getAttribute('id')),
+    )
+
+    Array.from(doc.getElementsByTagNameNS('*', 'lane')).forEach((lane) => lane.setAttribute('name', ''))
+    allParticipants.forEach((participant) => {
+      if (participant.getAttribute('name')) participant.setAttribute('name', '')
+    })
+
+    // Se deja el origen X de cada participante en su lugar.
+    // Cada carril se mueve a la derecha del encabezado padre; los nodos y
+    // conectores se desplazan después de ambas columnas.
+    Array.from(doc.getElementsByTagNameNS('*', 'BPMNShape')).forEach((shape) => {
+      const targetId = shape.getAttribute('bpmnElement')
+      const bounds = Array.from(shape.children).find((child) => child.localName === 'Bounds')
+      if (!bounds || !targetId) return
+
+      const x = Number(bounds.getAttribute('x'))
+      const width = Number(bounds.getAttribute('width'))
+      if (!Number.isFinite(x) || !Number.isFinite(width)) return
+
+      if (namedParticipants.has(targetId)) {
+        bounds.setAttribute('width', String(width + contentOffset))
+      } else if (laneIds.has(targetId)) {
+        bounds.setAttribute('x', String(x + participantHeaderWidth))
+        bounds.setAttribute('width', String(width + laneHeaderWidth))
+      } else {
+        bounds.setAttribute('x', String(x + contentOffset))
+      }
+
+      // Conservar la posición de cualquier etiqueta asociada al nodo. Las
+      // etiquetas BPMN de pools y carriles no se usan porque están vacías.
+      if (!namedParticipants.has(targetId) && !laneIds.has(targetId)) {
+        Array.from(shape.getElementsByTagNameNS('*', 'BPMNLabel')).forEach((label) => {
+          const labelBounds = Array.from(label.children).find((child) => child.localName === 'Bounds')
+          if (!labelBounds) return
+          const labelX = Number(labelBounds.getAttribute('x'))
+          if (Number.isFinite(labelX)) labelBounds.setAttribute('x', String(labelX + contentOffset))
+        })
+      }
+    })
+
+    Array.from(doc.getElementsByTagNameNS('*', 'BPMNEdge')).forEach((edge) => {
+      Array.from(edge.children).filter((child) => child.localName === 'waypoint').forEach((point) => {
+        const x = Number(point.getAttribute('x'))
+        if (Number.isFinite(x)) point.setAttribute('x', String(x + contentOffset))
+      })
+      Array.from(edge.getElementsByTagNameNS('*', 'BPMNLabel')).forEach((label) => {
+        const labelBounds = Array.from(label.children).find((child) => child.localName === 'Bounds')
+        if (!labelBounds) return
+        const x = Number(labelBounds.getAttribute('x'))
+        if (Number.isFinite(x)) labelBounds.setAttribute('x', String(x + contentOffset))
+      })
+    })
+
+    return new XMLSerializer().serializeToString(doc)
+  } catch {
+    return sanitizeBpmnXml(xml)
+  }
+}
+
 export function parseBpmn(xml: string): ParsedBpmn {
   const safeXml = sanitizeBpmnXml(xml)
   const doc = new DOMParser().parseFromString(safeXml, 'application/xml')

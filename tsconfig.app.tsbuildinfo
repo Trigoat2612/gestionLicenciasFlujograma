@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/lib-bpmn.ts","./src/main.tsx","./src/types.d.ts","./src/vite-env.d.ts","./src/components/BpmnViewer.tsx","./src/components/DetailPanel.tsx","./src/components/Sidebar.tsx","./src/data/catalog.ts","./src/data/procedure.ts"],"errors":true,"version":"5.8.3"}

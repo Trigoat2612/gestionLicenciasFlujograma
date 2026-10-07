@@ -6,7 +6,7 @@ import {
 import { BpmnViewer } from './components/BpmnViewer'
 import { DetailPanel } from './components/DetailPanel'
 import { Sidebar } from './components/Sidebar'
-import { bpmnSources, parseBpmn, sanitizeBpmnXml, type BpmnNode } from './lib-bpmn'
+import { bpmnSources, optimizeBpmnForViewer, parseBpmn, sanitizeBpmnXml, type BpmnNode } from './lib-bpmn'
 import { diagrams, levelLabels, type DiagramDefinition } from './data/catalog'
 import { pendingScenarios, procedure } from './data/procedure'
 
@@ -19,8 +19,12 @@ type SearchHit = {
   sublabel: string
 }
 
-function diagramXml(diagram: DiagramDefinition) {
+function rawDiagramXml(diagram: DiagramDefinition) {
   return sanitizeBpmnXml(bpmnSources[diagram.fileKey] ?? '')
+}
+
+function viewerDiagramXml(diagram: DiagramDefinition) {
+  return optimizeBpmnForViewer(bpmnSources[diagram.fileKey] ?? '')
 }
 
 function App() {
@@ -32,13 +36,14 @@ function App() {
   const [history, setHistory] = useState<string[]>([])
 
   const activeDiagram = diagrams.find((d) => d.id === activeId) ?? diagrams[0]
-  const xml = diagramXml(activeDiagram)
-  const parsed = useMemo(() => parseBpmn(xml), [xml])
+  const rawXml = rawDiagramXml(activeDiagram)
+  const xml = viewerDiagramXml(activeDiagram)
+  const parsed = useMemo(() => parseBpmn(rawXml), [rawXml])
   const selectedNode = parsed.nodes.find((n) => n.id === selectedNodeId)
 
   const parsedAll = useMemo(() => diagrams.map((diagram) => ({
     diagram,
-    parsed: parseBpmn(diagramXml(diagram)),
+    parsed: parseBpmn(rawDiagramXml(diagram)),
   })), [])
 
   const totalActivities = useMemo(() => parsedAll.reduce((sum, item) =>
@@ -170,10 +175,17 @@ function App() {
                     <span><UsersRound size={15} /> {parsed.lanes.length} carriles</span>
                   </div>
                 </div>
+                {parsed.lanes.length > 0 && (
+                  <div className="lane-strip" aria-label="Carriles del diagrama">
+                    {parsed.lanes.map((lane) => (
+                      <span key={lane} title={lane}>{lane}</span>
+                    ))}
+                  </div>
+                )}
               </section>
 
               <section className="viewer-layout">
-                <BpmnViewer xml={xml} selectedNode={selectedNode} onNodeSelect={onNodeSelect} />
+                <BpmnViewer xml={xml} sourceXml={rawXml} selectedNode={selectedNode} onNodeSelect={onNodeSelect} />
                 <DetailPanel node={selectedNode} flows={parsed.flows} onOpenDiagram={(id) => navigate(id)} />
               </section>
             </>

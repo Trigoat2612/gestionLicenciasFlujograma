@@ -90,6 +90,8 @@ button { color: inherit; }
 .diagram-title-row p { max-width: 830px; margin: 7px 0 0; color: #66758a; font-size: 13px; line-height: 1.5; }
 .diagram-metrics { display: flex; gap: 7px; white-space: nowrap; }
 .diagram-metrics span { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; color: #66758a; font-size: 11px; }
+.lane-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.lane-strip span { display: inline-flex; align-items: center; min-height: 28px; padding: 6px 10px; border-radius: 999px; background: #edf3fa; border: 1px solid #d9e3ef; color: #425b79; font-size: 11px; font-weight: 700; line-height: 1.25; }
 
 .viewer-layout { height: calc(100vh - 70px - 126px); min-height: 540px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
 .diagram-stage { position: relative; min-width: 0; background: #f6f8fb; overflow: hidden; }
@@ -100,6 +102,43 @@ button { color: inherit; }
 .diagram-tools button:hover { background: #f0f5fb; }
 .djs-container svg { background: transparent !important; }
 .djs-palette, .bjs-powered-by { display: none !important; }
+
+/* Dos niveles BPMN: participante padre y lane hijo, cada uno con su
+   propio espacio reservado en la geometría (lib-bpmn.ts). */
+.bpmn-participant-header,
+.bpmn-lane-header {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  text-align: center;
+  box-sizing: border-box;
+}
+.bpmn-participant-header {
+  background: #e3edfb;
+  border-right: 2px solid #5b7ea6;
+  color: #173a69;
+}
+.bpmn-lane-header {
+  background: #f7faff;
+  border-right: 2px solid #91a8c6;
+  color: #25476e;
+}
+.bpmn-participant-header span,
+.bpmn-lane-header span {
+  display: block;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  line-height: 1.35;
+  font-weight: 800;
+}
+.bpmn-participant-header span { font-size: 16px; }
+.bpmn-lane-header span { font-size: 14px; }
+
 .djs-element.node-selected .djs-visual > :first-child { stroke: #df7a14 !important; stroke-width: 4px !important; }
 
 .detail-panel { background: white; border-left: 1px solid var(--border); padding: 22px 20px 28px; overflow: auto; }
