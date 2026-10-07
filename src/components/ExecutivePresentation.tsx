@@ -203,16 +203,36 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           <div className="journey-layout">
             <div className="journey-rail">
               {journey.map((step) => (
-                <button key={step.id} className={activeStep.id === step.id ? 'active' : ''} onClick={() => setActiveStep(step)}>
+                <button
+                  key={step.id}
+                  className={activeStep.id === step.id ? 'active' : ''}
+                  onClick={() => setActiveStep(step)}
+                >
                   <span>{step.title.split('.')[0]}</span>
-                  <strong>{step.title.replace(/^\d\.\s*/, '')}</strong>
+                  <div style={{ minWidth: 0, textAlign: 'left' }}>
+                    <strong style={{ display: 'block' }}>
+                      {step.title.replace(/^\d\.\s*/, '')}
+                    </strong>
+                    <small
+                      style={{
+                        display: 'block',
+                        marginTop: 4,
+                        color: '#6f7e91',
+                        fontSize: '11px',
+                        lineHeight: 1.25,
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      {step.actor}
+                    </small>
+                  </div>
                 </button>
               ))}
             </div>
             <div className="journey-detail">
-              <span className="detail-kicker">{activeStep.actor}</span>
               <h3>{activeStep.title}</h3>
               <p>{activeStep.description}</p>
+              <div className="decision-box"><UsersRound size={17} /><div><strong>Actor responsable</strong><span>{activeStep.actor}</span></div></div>
               <div className="decision-box"><ListChecks size={17} /><div><strong>Decisión clave</strong><span>{activeStep.decision}</span></div></div>
               <div className="decision-box"><FileCheck2 size={17} /><div><strong>Salida esperada</strong><span>{activeStep.output}</span></div></div>
               {activeStepDiagramId && <button className="link-action" onClick={() => onOpenDiagram(activeStepDiagramId)}>Abrir detalle BPMN <ArrowRight size={15} /></button>}
