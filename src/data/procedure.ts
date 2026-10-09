@@ -1,6 +1,10 @@
 export const procedure = {
   title: 'Procedimiento de gestión integral de licencias STEJENP',
+<<<<<<< HEAD
   version: 'Modelo BPMN v0.6 · Proyecto v2.2.2',
+=======
+  version: 'Modelo BPMN v0.6 · Proyecto v2.2.0',
+>>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
   date: '8 de octubre de 2026',
   objective: 'Gestionar el ciclo de licencias STEJENP con autorización previa, control de capacidad, ejecución trazable, seguimiento de estados, conciliación y regularización administrativa cuando corresponda.',
   scope: 'La vista integra las operaciones del Poder Judicial y Softplan, incluyendo alta, baja, modificación, suspensión/reactivación, cargas masivas, consultas, controles de reservas y temporalidad, ANS, conciliación y contingencias.',

@@ -1,7 +1,11 @@
 {
   "name": "stejenp-licencias-presentacion-gerencial",
   "private": true,
+<<<<<<< HEAD
   "version": "2.2.2",
+=======
+  "version": "2.2.0",
+>>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
   "type": "module",
   "scripts": {
     "dev": "vite",
