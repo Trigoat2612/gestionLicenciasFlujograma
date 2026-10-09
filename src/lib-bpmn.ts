@@ -104,54 +104,131 @@ export function optimizeBpmnForViewer(xml: string): string {
     const { participantHeaderWidth, laneHeaderWidth } = SWIMLANE_LAYOUT
     const contentOffset = participantHeaderWidth + laneHeaderWidth
 
-    // Evitamos la rotación BPMN estándar: las cabeceras se dibujan como
-    // overlays HTML en columnas independientes usando los nombres originales.
-    const allParticipants = Array.from(doc.getElementsByTagNameNS('*', 'participant'))
-    const namedParticipants = new Set(
-      allParticipants.filter((p) => (p.getAttribute('name') ?? '').trim()).map((p) => p.getAttribute('id')),
-    )
-    const laneIds = new Set(
-      Array.from(doc.getElementsByTagNameNS('*', 'lane')).map((lane) => lane.getAttribute('id')),
-    )
+    const participants = Array.from(doc.getElementsByTagNameNS('*', 'participant'))
+    const lanes = Array.from(doc.getElementsByTagNameNS('*', 'lane'))
+    const shapes = Array.from(doc.getElementsByTagNameNS('*', 'BPMNShape'))
 
-    Array.from(doc.getElementsByTagNameNS('*', 'lane')).forEach((lane) => lane.setAttribute('name', ''))
-    allParticipants.forEach((participant) => {
+    const processIdByLaneId = new Map<string, string>()
+    Array.from(doc.getElementsByTagNameNS('*', 'process')).forEach((process) => {
+      const processId = process.getAttribute('id') ?? ''
+      Array.from(process.getElementsByTagNameNS('*', 'lane')).forEach((lane) => {
+        const laneId = lane.getAttribute('id')
+        if (laneId) processIdByLaneId.set(laneId, processId)
+      })
+    })
+
+    const participantIdByProcessId = new Map<string, string>()
+    participants.forEach((participant) => {
+      const participantId = participant.getAttribute('id')
+      const processRef = participant.getAttribute('processRef')
+      if (participantId && processRef) participantIdByProcessId.set(processRef, participantId)
+    })
+
+    type BoundsSnapshot = { x: number; y: number; width: number; height: number }
+    const originalBounds = new Map<string, BoundsSnapshot>()
+    shapes.forEach((shape) => {
+      const id = shape.getAttribute('bpmnElement')
+      const bounds = Array.from(shape.children).find((child) => child.localName === 'Bounds')
+      if (!id || !bounds) return
+      const snapshot = {
+        x: Number(bounds.getAttribute('x')),
+        y: Number(bounds.getAttribute('y')),
+        width: Number(bounds.getAttribute('width')),
+        height: Number(bounds.getAttribute('height')),
+      }
+      if (Object.values(snapshot).every(Number.isFinite)) originalBounds.set(id, snapshot)
+    })
+
+    const participantIds = new Set(participants.map((p) => p.getAttribute('id')).filter(Boolean) as string[])
+    const laneIds = new Set(lanes.map((lane) => lane.getAttribute('id')).filter(Boolean) as string[])
+
+    // Los nombres de pool/lane se dibujan con overlays HTML horizontales.
+    lanes.forEach((lane) => lane.setAttribute('name', ''))
+    participants.forEach((participant) => {
       if (participant.getAttribute('name')) participant.setAttribute('name', '')
     })
 
-    // Se deja el origen X de cada participante en su lugar.
-    // Cada carril se mueve a la derecha del encabezado padre; los nodos y
-    // conectores se desplazan después de ambas columnas.
-    Array.from(doc.getElementsByTagNameNS('*', 'BPMNShape')).forEach((shape) => {
+    // Bizagi exporta ciertos boundary events con nombre y etiqueta sobre el mismo punto.
+    // Cuando una actividad concentra tres o más controles, ocultamos esos rótulos en la
+    // vista general y reducimos ligeramente el círculo. El nombre completo sigue disponible
+    // en el panel de detalle porque se parsea desde el XML original.
+    const boundaryEvents = Array.from(doc.getElementsByTagNameNS('*', 'boundaryEvent'))
+    const boundaryByActivity = new Map<string, Element[]>()
+    boundaryEvents.forEach((event) => {
+      const attachedToRef = event.getAttribute('attachedToRef')
+      if (!attachedToRef) return
+      boundaryByActivity.set(attachedToRef, [...(boundaryByActivity.get(attachedToRef) ?? []), event])
+    })
+    const compactBoundaryIds = new Set<string>()
+    boundaryByActivity.forEach((events) => {
+      if (events.length < 3) return
+      events.forEach((event) => {
+        const id = event.getAttribute('id')
+        if (!id) return
+        compactBoundaryIds.add(id)
+        event.setAttribute('name', '')
+      })
+    })
+
+    shapes.forEach((shape) => {
       const targetId = shape.getAttribute('bpmnElement')
       const bounds = Array.from(shape.children).find((child) => child.localName === 'Bounds')
       if (!bounds || !targetId) return
 
-      const x = Number(bounds.getAttribute('x'))
-      const width = Number(bounds.getAttribute('width'))
-      if (!Number.isFinite(x) || !Number.isFinite(width)) return
+      const current = originalBounds.get(targetId)
+      if (!current) return
 
-      if (namedParticipants.has(targetId)) {
-        bounds.setAttribute('width', String(width + contentOffset))
+      if (participantIds.has(targetId)) {
+        // El pool conserva su X original y crece exactamente lo mismo que la suma
+        // de las dos columnas de cabecera.
+        bounds.setAttribute('width', String(current.width + contentOffset))
       } else if (laneIds.has(targetId)) {
-        bounds.setAttribute('x', String(x + participantHeaderWidth))
-        bounds.setAttribute('width', String(width + laneHeaderWidth))
+        // Todos los lanes hijos de un mismo pool empiezan y terminan en los mismos X.
+        // Esto evita el descuadre producido por los márgenes internos que exporta Bizagi.
+        const processId = processIdByLaneId.get(targetId)
+        const participantId = processId ? participantIdByProcessId.get(processId) : undefined
+        const participantBounds = participantId ? originalBounds.get(participantId) : undefined
+
+        if (participantBounds) {
+          bounds.setAttribute('x', String(participantBounds.x + participantHeaderWidth))
+          bounds.setAttribute('width', String(participantBounds.width + laneHeaderWidth))
+        } else {
+          bounds.setAttribute('x', String(current.x + participantHeaderWidth))
+          bounds.setAttribute('width', String(current.width + laneHeaderWidth))
+        }
       } else {
-        bounds.setAttribute('x', String(x + contentOffset))
+        bounds.setAttribute('x', String(current.x + contentOffset))
       }
 
-      // Conservar la posición de cualquier etiqueta asociada al nodo. Las
-      // etiquetas BPMN de pools y carriles no se usan porque están vacías.
-      if (!namedParticipants.has(targetId) && !laneIds.has(targetId)) {
+      if (compactBoundaryIds.has(targetId)) {
+        const originalWidth = current.width
+        const originalHeight = current.height
+        const compactSize = Math.max(28, Math.min(32, Math.min(originalWidth, originalHeight)))
+        const dx = (originalWidth - compactSize) / 2
+        const dy = (originalHeight - compactSize) / 2
+        bounds.setAttribute('x', String(current.x + contentOffset + dx))
+        bounds.setAttribute('y', String(current.y + dy))
+        bounds.setAttribute('width', String(compactSize))
+        bounds.setAttribute('height', String(compactSize))
+      }
+
+      // Las etiquetas de nodos normales se desplazan con el contenido.
+      if (!participantIds.has(targetId) && !laneIds.has(targetId)) {
         Array.from(shape.getElementsByTagNameNS('*', 'BPMNLabel')).forEach((label) => {
           const labelBounds = Array.from(label.children).find((child) => child.localName === 'Bounds')
           if (!labelBounds) return
+          if (compactBoundaryIds.has(targetId)) {
+            labelBounds.setAttribute('width', '0')
+            labelBounds.setAttribute('height', '0')
+            return
+          }
           const labelX = Number(labelBounds.getAttribute('x'))
           if (Number.isFinite(labelX)) labelBounds.setAttribute('x', String(labelX + contentOffset))
         })
       }
     })
 
+    // Los conectores se desplazan la misma distancia que las actividades.
     Array.from(doc.getElementsByTagNameNS('*', 'BPMNEdge')).forEach((edge) => {
       Array.from(edge.children).filter((child) => child.localName === 'waypoint').forEach((point) => {
         const x = Number(point.getAttribute('x'))

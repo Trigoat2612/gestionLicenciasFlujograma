@@ -1,19 +1,28 @@
 export const procedure = {
   title: 'Procedimiento de gestión integral de licencias STEJENP',
-  version: 'Propuesta v0.2',
-  date: '7 de octubre de 2026',
-  objective: 'Asignar, provisionar, ampliar, liberar, modificar y conciliar licencias de la STEJENP, asegurando autorización, control de capacidad y trazabilidad técnica y administrativa.',
-  scope: 'Aplica a las licencias vinculadas a la STEJENP para las especialidades Laboral, Civil, Familia y Justicia de Género, según el alcance contratado y desplegado.',
+  version: 'Modelo BPMN v0.6 · Proyecto v2.2.2',
+  date: '8 de octubre de 2026',
+  objective: 'Gestionar el ciclo de licencias STEJENP con autorización previa, control de capacidad, ejecución trazable, seguimiento de estados, conciliación y regularización administrativa cuando corresponda.',
+  scope: 'La vista integra las operaciones del Poder Judicial y Softplan, incluyendo alta, baja, modificación, suspensión/reactivación, cargas masivas, consultas, controles de reservas y temporalidad, ANS, conciliación y contingencias.',
   principles: [
     'Autorización previa',
-    'Control de capacidad',
-    'Responsabilidades diferenciadas',
-    'Continuidad de acceso',
-    'Trazabilidad',
-    'Cierres diferenciados',
+    'Control de capacidad y reservas',
+    'Ejecución solo por actor habilitado',
+    'Continuidad y control de temporalidad',
+    'Trazabilidad del caso y de cada solicitud',
+    'Cierres técnico, administrativo y comercial diferenciados',
   ],
-  states: ['DISPONIBLE', 'RESERVADA', 'ASIGNADA', 'LIBERADA', 'VENCIDA', 'CANCELADA'],
-  operationTypes: ['ALTA', 'PROVISION', 'AMPLIACION', 'BAJA / LIBERACION', 'MODIFICACION', 'LIBERAR_ANTERIOR', 'REPORTE', 'AJUSTE_INVENTARIO'],
+  states: ['DISPONIBLE', 'RESERVADA', 'ASIGNADA', 'LIBERADA', 'SUSPENDIDA', 'VENCIDA', 'CANCELADA'],
+  operationTypes: [
+    'ALTA / ASIGNACION',
+    'BAJA / LIBERACION',
+    'MODIFICACION',
+    'SUSPENDER / REACTIVAR',
+    'CARGA_MASIVA',
+    'CONSULTA / CONFIRMACION',
+    'PROVISION / AMPLIACION',
+    'REPORTE / AJUSTE_INVENTARIO',
+  ],
 }
 
 export type ActivityReference = {
@@ -22,82 +31,120 @@ export type ActivityReference = {
   note?: string
 }
 
+// Referencias complementarias para las actividades principales. El detalle operativo
+// se obtiene directamente del carril y de la documentación embebida en cada BPMN.
 export const activityReference: Record<string, ActivityReference> = {
-  PJ01: { responsible: 'Gestión de Servicios PJ', evidence: 'Caso atendido mediante el detalle 01 y sus ramas AL, BA o MO.' },
-  PJ03: { responsible: 'Unidad administrativa PJ', evidence: 'Regularización tramitada mediante el detalle 07.' },
-  SP00: { responsible: 'Mesa de Servicios Softplan', evidence: 'Solicitud validada y operación resuelta mediante el detalle 02.' },
-  SP12: { responsible: 'Gestión comercial Softplan', evidence: 'Referencia comercial registrada mediante el detalle 11.' },
-  IN01: { responsible: 'Instancia de aceptación', evidence: 'Respaldo de aceptación o preaceptación verificado.' },
-  IN02: { responsible: 'Gestión de Servicios PJ', evidence: 'Requerimiento con usuario o recurso, licencia y operación identificados.' },
-  AL: { responsible: 'Gestión de Servicios PJ', evidence: 'Resultado del detalle 03 Alta.' },
-  BA: { responsible: 'Gestión de Servicios PJ', evidence: 'Resultado del detalle 04 Baja.' },
-  MO: { responsible: 'Gestión de Servicios PJ', evidence: 'Resultado del detalle 05 Modificación.' },
-  AL01: { responsible: 'Gestión de Servicios PJ', evidence: 'Tipo de licencia y temporalidad definidos.' },
-  AL02: { responsible: 'Gestión de Servicios PJ', evidence: 'Consulta del inventario y disponibilidad sustentada.' },
-  AL03: { responsible: 'Gestión de Servicios PJ', evidence: 'Reserva vinculada a la solicitud.' },
-  AL04: { responsible: 'Gestión de Servicios PJ', evidence: 'Solicitud de provisión con capacidad contratada identificada.' },
-  AL05: { responsible: 'Gestión de Servicios PJ', evidence: 'Autorización de ampliación y mecanismo contractual registrados.' },
-  AL06: { responsible: 'Gestión de Servicios PJ', evidence: 'Resultado atendido y evidencia obtenidos a través de COM.' },
-  AL08: { responsible: 'Gestión de Servicios PJ', evidence: 'Licencia ASIGNADA vinculada al usuario o recurso y a la evidencia.' },
-  AL09: { responsible: 'Área usuaria', evidence: 'Confirmación del acceso o atención por el área usuaria.' },
-  BA01: { responsible: 'Gestión de Servicios PJ', evidence: 'Licencia asociada y prioridad identificadas.' },
-  BA02: { responsible: 'Gestión de Servicios PJ', evidence: 'Desactivación o desasociación confirmada mediante COM.' },
-  BA04: { responsible: 'Gestión de Servicios PJ', evidence: 'Liberación registrada y condiciones de reutilización verificadas.' },
-  BA05: { responsible: 'Gestión de Servicios PJ', evidence: 'Estado DISPONIBLE cuando la licencia sea reutilizable.' },
-  BA06: { responsible: 'Gestión de Servicios PJ', evidence: 'Estado VENCIDA o CANCELADA, según el sustento.' },
-  MO01: { responsible: 'Gestión de Servicios PJ', evidence: 'Evaluación del impacto de la modificación en la licencia.' },
-  MO02: { responsible: 'Gestión de Servicios PJ', evidence: 'Registro del cambio sin impacto en licencia.' },
-  MO03: { responsible: 'Gestión de Servicios PJ', evidence: 'Nueva licencia identificada y consulta de inventario.' },
-  MO04: { responsible: 'Gestión de Servicios PJ', evidence: 'Reserva de nueva licencia vinculada al caso.' },
-  MO05: { responsible: 'Gestión de Servicios PJ', evidence: 'Solicitud preparada con provisión o ampliación y su respaldo.' },
-  MO06: { responsible: 'Gestión de Servicios PJ', evidence: 'Nueva asignación o reasignación confirmada mediante COM.' },
-  MO08: { responsible: 'Área usuaria', evidence: 'Validación del acceso bajo la nueva condición por el área usuaria.' },
-  MO09: { responsible: 'Gestión de Servicios PJ', evidence: 'Liberación anterior confirmada mediante una nueva invocación de COM.' },
-  MO10: { responsible: 'Gestión de Servicios PJ', evidence: 'Inventario actualizado con nueva asignación y tratamiento de la licencia anterior.' },
-  CO01: { responsible: 'Gestión de Servicios PJ', evidence: 'Reporte de licencias obtenido mediante COM.' },
-  CO02: { responsible: 'Gestión de Servicios PJ', evidence: 'Comparación entre reporte Softplan e inventario maestro PJ.' },
-  CO03: { responsible: 'Gestión de Servicios PJ', evidence: 'Diferencias registradas con evidencia, responsable y plazo.' },
-  CO04: { responsible: 'Gestión de Servicios PJ', evidence: 'Ajuste o aclaración obtenido mediante COM.' },
-  CO05: { responsible: 'Gestión de Servicios PJ', evidence: 'Inventario actualizado y diferencias cerradas con evidencia.' },
-  COM01: { responsible: 'Gestión de Servicios PJ', evidence: 'Solicitud enviada con su operación, identificación y respaldo.' },
-  COM03: { responsible: 'Gestión de Servicios PJ', evidence: 'Información corregida o completada y sustento de la subsanación.' },
-  COM04: { responsible: 'Gestión de Servicios PJ', evidence: 'Subsanación remitida con el mismo identificador de solicitud.' },
-  SV: { responsible: 'Mesa de Servicios Softplan', evidence: 'Resultado de validación del detalle 09.' },
-  SP01: { responsible: 'Mesa de Servicios Softplan', evidence: 'Ticket registrado y datos mínimos verificados; en una subsanación se actualiza el mismo ticket.' },
-  SP02: { responsible: 'Mesa de Servicios Softplan', evidence: 'Observaciones o datos faltantes comunicados al PJ.' },
-  ST: { responsible: 'Ejecutor técnico Softplan', evidence: 'Resultado técnico del detalle 10.' },
-  SP03: { responsible: 'Ejecutor técnico Softplan', evidence: 'Provisión, asignación o activación autorizada, con identificación de la licencia.' },
-  SP04: { responsible: 'Ejecutor técnico Softplan', evidence: 'Desactivación o desasociación confirmada, preservando la trazabilidad.' },
-  SP05: { responsible: 'Ejecutor técnico Softplan', evidence: 'Nueva asignación o reasignación aplicada.' },
-  SP06: { responsible: 'Ejecutor técnico Softplan', evidence: 'Liberación de la licencia anterior sustentada en la validación PJ.' },
-  SP08: { responsible: 'Mesa de Servicios Softplan', evidence: 'Reporte técnico de licencias preparado.' },
-  SP09: { responsible: 'Ejecutor técnico Softplan', evidence: 'Análisis y ajuste o confirmación del registro, con evidencia.' },
-  SP10: { responsible: 'Mesa de Servicios Softplan', evidence: 'Aclaración o confirmación de ajuste preparada.' },
-  SP07: { responsible: 'Ejecutor técnico Softplan', evidence: 'Respuesta ATENDIDA enviada con operación, resultado, identificación y evidencia.' },
-  AD01: { responsible: 'Unidad administrativa PJ', evidence: 'Expediente o registro de regularización iniciado y vinculado a la ampliación.' },
-  AD02: { responsible: 'Unidad administrativa PJ', evidence: 'Regularización concluida y documentos de facturación, conformidad o pago, según corresponda.' },
-  SP11: { responsible: 'Gestión comercial Softplan', evidence: 'Referencia comercial o contractual registrada y vinculada al caso de ampliación.' },
+  PJ01: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado, estado y evidencia de la operación vinculados al idCaso y a su idSolicitud.' },
+  PJ03: { responsible: 'Unidad administrativa o contractual PJ', evidence: 'Expediente administrativo y estado de regularización vinculados a la ampliación.' },
+  PJ04: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Folio de contingencia vinculado al ticket regularizado y a los mensajes originales.' },
+  PJ05: { responsible: 'Gestión de Servicios / Dirección Ejecutiva PJ', evidence: 'Hitos, pausas admitidas, alertas y escalaciones registradas.' },
+  PJ06: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Reporte conciliado, diferencias, ajustes y pendientes con fecha de corte.' },
+  PJ07: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado de prórroga, baja o reversión de la licencia temporal con evidencia.' },
+  PJ08: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Reserva verificada, prorrogada o liberada con nueva fecha y evidencia.' },
+  SP00: { responsible: 'Mesa de Servicios / Ejecutor técnico Softplan', evidence: 'Resultado final de validación y ejecución con evidencia.' },
+  SP12: { responsible: 'Gestión comercial Softplan', evidence: 'Referencia comercial, consumo conciliado y seguimiento de cierre.' },
+
+  IN01: { responsible: 'Instancia de aceptación PJ', evidence: 'Autorización y facultades aplicables verificadas.' },
+  IN02: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Caso, prioridad, usuario y licencia registrados.' },
+  IN05: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Seguimiento independiente programado para pendientes y controles.' },
+
+  AL: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado del detalle 03 Alta y capacidad contratada.' },
+  BA: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado del detalle 04 Baja y reutilización.' },
+  MO: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado del detalle 05 Modificación y liberación anterior.' },
+  SU: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado del detalle 15 Suspensión y reactivación.' },
+  LT: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado del detalle 14 Cargas masivas y despliegue.' },
+  QU: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Consulta o confirmación tramitada sin modificar capacidad ni asignación.' },
+
+  AL06: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado y evidencia de ALTA, PROVISION o AMPLIACION obtenidos mediante el intercambio común.' },
+  BA02: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Resultado y evidencia de BAJA o LIBERACION obtenidos mediante el intercambio común.' },
+  MO06: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Nueva condición gestionada con resultado y evidencia.' },
+  MO09: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Liberación de licencia anterior gestionada con evidencia de validación previa.' },
+  SU02: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Suspensión autorizada gestionada preservando la historia.' },
+  SU04: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Reactivación autorizada gestionada sobre licencia vigente.' },
+  LT04: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Provisión o ampliación del lote confirmada antes de atender las filas.' },
+  LT06: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Fila del lote atendida individualmente con idSolicitud e idempotencia de reserva.' },
+  CO01: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Reporte de licencias solicitado con alcance y fecha de corte.' },
+  CO04: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Ajuste de inventario solicitado con diferencias, evidencia y autorización.' },
+  COM00: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Canal alterno preparado con criticidad, autorización y medio acordado.' },
+  TM03: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Reversión temporal autorizada ejecutada mediante modificación.' },
+  TM04: { responsible: 'Gestión de Servicios o administrador de licencias PJ', evidence: 'Baja programada o expiración verificada mediante el flujo de baja.' },
+
+  SV: { responsible: 'Mesa de Servicios Softplan', evidence: 'Emisor, datos y respaldos validados; observación o rechazo comunicado cuando corresponde.' },
+  ST: { responsible: 'Ejecutor técnico Softplan', evidence: 'Resultado técnico y evidencia de la operación solicitada.' },
+  SP07: { responsible: 'Ejecutor técnico Softplan', evidence: 'Resultado final y evidencia. ATENDIDA acredita ejecución o consulta; RECHAZADA/CANCELADA conservan causa y PENDIENTE no acredita ejecución.' },
 }
 
 export const pendingScenarios = [
   {
-    title: 'Ampliación en modificación',
-    detail: 'MO05 admite provisión o ampliación, pero el recorrido de modificación no explicita la activación de AD01 y SP11 cuando el cambio requiere capacidad adicional.'
+    title: 'Periodicidad de conciliación',
+    detail: 'El flujo ya registra la próxima conciliación, pero el valor de la periodicidad debe aprobarse y parametrizarse antes de automatizar su ejecución.',
+    solution: 'Definir la periodicidad como parámetro operativo, no como una fecha fija embebida en el BPMN.',
+    steps: [
+      'Aprobar la periodicidad aplicable por el responsable del procedimiento.',
+      'Registrar PERIODICIDAD_CONCILIACION como parámetro configurable.',
+      'Guardar fecha de corte, fecha de ejecución, próxima fecha, responsable y resultado.',
+      'Hacer que PJ09 calcule la próxima fecha usando el parámetro aprobado.',
+      'Definir el tratamiento de una conciliación vencida y su escalamiento mediante el control ANS.'
+    ]
   },
   {
-    title: 'Licencia anterior no reutilizable',
-    detail: 'MO10 muestra la licencia anterior como DISPONIBLE; falta formalizar la alternativa VENCIDA o CANCELADA cuando no corresponda reutilización.'
+    title: 'Vigencia y prórroga de reservas',
+    detail: 'El BPMN controla reservas sin ejecución, pero la vigencia máxima y las reglas de prórroga todavía requieren formalización.',
+    solution: 'Administrar la reserva mediante parámetros de vigencia y número máximo de prórrogas, conservando evidencia de cada cambio.',
+    steps: [
+      'Aprobar VIGENCIA_MAX_RESERVA y MAX_PRORROGAS_RESERVA.',
+      'Registrar fecha de reserva, fecha de vencimiento, idSolicitud y justificación.',
+      'Validar en RV02 si existe ejecución confirmada antes de liberar una reserva.',
+      'Si corresponde prórroga, registrar nueva fecha y sustento en RV03.',
+      'Si no existe sustento, cambiar a DISPONIBLE en RV04 y conservar evidencia.'
+    ]
   },
   {
-    title: 'Respuesta distinta de observada o atendida',
-    detail: 'El flujo COM solo distingue OBSERVADA y ATENDIDA; queda por acordar el tratamiento de rechazo definitivo, imposibilidad técnica o cancelación.'
+    title: 'Canal alterno y regularización de contingencia',
+    detail: 'El flujo de contingencia existe, pero deben aprobarse los canales alternos, actores autorizados y plazo de regularización del ticket oficial.',
+    solution: 'Definir un catálogo de canales de contingencia y asegurar la correlación entre el folio alterno y el ticket oficial.',
+    steps: [
+      'Aprobar CANAL_OFICIAL, canales alternos permitidos y actores autorizados.',
+      'Definir el plazo máximo de regularización una vez restablecida la herramienta oficial.',
+      'Generar un folio de contingencia con idCaso, operación, usuario/recurso, licencia, fecha y autorización.',
+      'Al restablecerse el canal oficial, crear el ticket y vincular folio_contingencia ↔ ticket_oficial.',
+      'Escalar automáticamente los casos que excedan el plazo formalizado.'
+    ]
   },
   {
-    title: 'Validación de acceso no satisfactoria',
-    detail: 'AL09 y MO08 no tienen una alternativa de fallo dibujada. En modificación, la licencia anterior no debe liberarse mientras no se confirme la nueva condición.'
+    title: 'Matriz de habilitación técnica PJ / Softplan',
+    detail: 'Alta, baja y modificación preguntan si el PJ está facultado y técnicamente habilitado. Esa condición debe basarse en una regla objetiva y vigente.',
+    solution: 'Aprobar una matriz que indique, por operación y ambiente, quién puede ejecutar y qué evidencia debe dejar.',
+    steps: [
+      'Listar cada operación técnica y los ambientes donde puede ejecutarse.',
+      'Definir si corresponde ejecución PJ, Softplan o ambos bajo condiciones específicas.',
+      'Asignar responsables nominales, perfiles y privilegios habilitados.',
+      'Definir evidencia mínima, validación posterior y procedimiento de reversión.',
+      'Referenciar la matriz en los gateways que preguntan por facultad y habilitación técnica.'
+    ]
   },
   {
-    title: 'Programación y automatización',
-    detail: 'La conciliación no expresa una frecuencia; si se automatiza, debe configurarse la correlación de mensajes, tipos de operación y escalaciones entre niveles.'
+    title: 'Catálogo de escalaciones BPMN',
+    detail: 'El N0 recibe ampliación, contingencia y seguimiento ANS desde ramas distintas. Conviene formalizar eventos diferenciados para evitar una correlación ambigua.',
+    solution: 'Asignar una escalación distinta a cada propósito y hacer que cada boundary event escuche únicamente su evento correspondiente.',
+    steps: [
+      'Definir códigos diferenciados, por ejemplo ESC_AMPLIACION_PJ, ESC_CONTINGENCIA y ESC_AMPLIACION_SOFTPLAN.',
+      'Asignar la escalación correcta a los eventos de lanzamiento de cada N2.',
+      'Configurar en N0 los boundary events receptores con la escalación correspondiente.',
+      'Exportar nuevamente y verificar que cada evento incluya su escalationRef.',
+      'Documentar el catálogo junto con la matriz de correlación entre niveles.'
+    ]
+  },
+  {
+    title: 'ANS, ANO y reglas de escalamiento',
+    detail: 'El flujo de control de ANS ya contempla hitos y escalamiento, pero los tiempos, pausas y umbrales deben quedar aprobados como parámetros operativos.',
+    solution: 'Parametrizar los niveles de servicio y separar claramente el tiempo atribuible al PJ del tiempo atribuible al proveedor.',
+    steps: [
+      'Aprobar ANS por operación y ANO por etapa interna PJ.',
+      'Definir horario aplicable y causas válidas de suspensión del cómputo.',
+      'Formalizar el umbral de alerta preventiva como parámetro configurable.',
+      'Asignar responsables y niveles de escalamiento: Gestión de Servicios, Service Manager y Dirección.',
+      'Registrar en cada caso hitos, pausas, reanudaciones, vencimiento y evidencia del escalamiento.'
+    ]
   },
 ]

@@ -2,8 +2,9 @@ import { useState } from 'react'
 import {
   AlertTriangle, ArrowRight, BarChart3, CheckCircle2, ClipboardCheck, Database,
   FileCheck2, GitBranch, Layers3, ListChecks, PlayCircle, RefreshCcw, ShieldCheck,
-  UsersRound, Workflow, Zap,
+  UsersRound, Workflow, Zap, ChevronDown,
 } from 'lucide-react'
+import { diagrams } from '../data/catalog'
 import { pendingScenarios, procedure } from '../data/procedure'
 
 type ExecutivePresentationProps = {
@@ -31,59 +32,70 @@ type Scenario = {
   attention?: string
 }
 
+type SummaryPanel = 'operations' | 'states' | 'diagrams' | 'controls'
+
 const journey: JourneyStep[] = [
   {
     id: 'autorizar',
     title: '1. Autorizar necesidad',
     actor: 'PJ · Instancia de aceptación',
-    description: 'La necesidad debe estar aceptada o preaceptada antes de pedir una licencia.',
-    decision: '¿Existe respaldo válido?',
-    output: 'Necesidad habilitada para registro y atención.',
+    description: 'Se verifica el respaldo y las facultades aplicables antes de registrar y ejecutar una operación de licencia.',
+    decision: '¿Existe respaldo suficiente y válido?',
+    output: 'Necesidad habilitada para registro y clasificación.',
     diagramId: '01',
   },
   {
     id: 'clasificar',
     title: '2. Clasificar operación',
     actor: 'Gestión de Servicios PJ',
-    description: 'Se define si corresponde alta, baja, modificación, reporte o ajuste de inventario.',
-    decision: '¿Qué operación corresponde?',
-    output: 'Caso registrado con usuario/recurso, licencia, prioridad y evidencia.',
+    description: 'El caso se registra y se clasifica como alta, baja, modificación, suspensión/reactivación, carga masiva o consulta/confirmación.',
+    decision: '¿Qué tipo de operación corresponde?',
+    output: 'Caso, prioridad, usuario/recurso y licencia identificados.',
     diagramId: '01',
   },
   {
     id: 'capacidad',
-    title: '3. Verificar capacidad',
+    title: '3. Verificar capacidad y estado',
     actor: 'Gestión de Servicios PJ',
-    description: 'Se revisa inventario, disponibilidad, provisión contratada o ampliación autorizada.',
-    decision: '¿Hay licencia disponible o capacidad contratada?',
-    output: 'Licencia reservada, solicitud de provisión o ampliación sustentada.',
+    description: 'Se revisan inventario, disponibilidad, reutilización, capacidad contratada, ampliación y reservas antes de ejecutar.',
+    decision: '¿Existe capacidad o condición habilitante para continuar?',
+    output: 'Licencia reservada, capacidad preparada o impedimento registrado.',
     diagramId: '03',
   },
   {
-    id: 'softplan',
-    title: '4. Ejecutar con Softplan',
-    actor: 'Mesa / Ejecutor técnico Softplan',
-    description: 'Softplan valida datos, observa si falta información y ejecuta la operación técnica.',
-    decision: '¿Solicitud válida y ejecutable?',
-    output: 'Respuesta observada o atendida con evidencia técnica.',
-    diagramId: '02',
+    id: 'ejecutar',
+    title: '4. Ejecutar operación',
+    actor: 'Ejecutor PJ habilitado / Softplan',
+    description: 'La ejecución se realiza por el actor formalmente facultado. Softplan valida y procesa cuando la operación debe tramitarse con el proveedor.',
+    decision: '¿Quién está facultado y técnicamente habilitado para ejecutar?',
+    output: 'Operación ejecutada o impedimento trazado con evidencia.',
+    diagramId: '10',
   },
   {
     id: 'validar',
-    title: '5. Validar resultado e inventario',
+    title: '5. Validar resultado y estados',
     actor: 'Área usuaria + Gestión de Servicios PJ',
-    description: 'El PJ confirma el resultado, actualiza estados y conserva evidencia.',
-    decision: '¿Resultado confirmado y trazable?',
-    output: 'Inventario actualizado: asignada, liberada, disponible, vencida o cancelada.',
-    diagramId: '08',
+    description: 'El resultado se confirma antes del cierre y se actualizan los estados reales de la licencia y del inventario.',
+    decision: '¿Resultado confirmado, vigente y trazable?',
+    output: 'Inventario actualizado y evidencia vinculada al caso.',
+    diagramId: '05',
   },
   {
-    id: 'control',
-    title: '6. Conciliar y regularizar',
+    id: 'controlar',
+    title: '6. Controlar continuidad y plazos',
+    actor: 'Gestión de Servicios / Dirección Ejecutiva PJ',
+    description: 'Se controlan ANS, reservas, licencias temporales, pendientes e incidencias que requieren seguimiento o escalamiento.',
+    decision: '¿Existe vencimiento, bloqueo, reserva o temporalidad por atender?',
+    output: 'Seguimiento programado, escalamiento o control cerrado con evidencia.',
+    diagramId: '16',
+  },
+  {
+    id: 'conciliar',
+    title: '7. Conciliar y regularizar',
     actor: 'Gestión de Servicios / Unidad administrativa PJ',
-    description: 'La conciliación y regularización se controlan por separado del resultado técnico.',
-    decision: '¿Existen diferencias o ampliaciones por cerrar?',
-    output: 'Diferencias cerradas y regularización documentada.',
+    description: 'La conciliación, la regularización administrativa y el registro comercial se controlan por separado del resultado técnico.',
+    decision: '¿Existen diferencias, ampliaciones o contingencias por cerrar?',
+    output: 'Diferencias tratadas y regularizaciones documentadas.',
     diagramId: '06',
   },
 ]
@@ -93,73 +105,119 @@ const scenarios: Scenario[] = [
     id: 'alta',
     title: 'Alta / asignación',
     trigger: 'Nuevo usuario o recurso requiere licencia.',
-    executiveMessage: 'Primero se verifica autorización y capacidad. Si no hay licencia disponible, se distingue provisión contratada de ampliación adicional.',
+    executiveMessage: 'Se verifica autorización, disponibilidad, reutilización y capacidad. La ejecución puede ser interna si el PJ está formalmente habilitado o tramitarse con Softplan.',
     result: 'Licencia asignada, acceso confirmado e inventario actualizado.',
     diagramId: '03',
-    attention: 'Una ampliación no se habilita solo por urgencia: necesita respaldo contractual.',
+    attention: 'Las provisiones y ampliaciones técnicas se remiten a Softplan; la asignación interna solo aplica dentro de capacidad habilitada.',
   },
   {
     id: 'baja',
     title: 'Baja / liberación',
-    trigger: 'Usuario, recurso o asignación deja de requerir licencia.',
-    executiveMessage: 'Se libera la licencia y luego se decide si queda disponible, vencida o cancelada.',
-    result: 'Desasociación confirmada y estado de licencia controlado.',
+    trigger: 'La licencia deja de ser requerida o debe retirarse.',
+    executiveMessage: 'Se confirma la liberación y luego se determina si la licencia queda disponible, vencida o cancelada.',
+    result: 'Desasociación confirmada y estado final de la licencia registrado.',
     diagramId: '04',
   },
   {
     id: 'modificacion',
     title: 'Modificación',
-    trigger: 'Cambio de condición, perfil o necesidad operativa.',
-    executiveMessage: 'La nueva condición se valida antes de liberar la licencia anterior para evitar pérdida de continuidad.',
-    result: 'Nueva licencia validada, licencia anterior tratada e inventario actualizado.',
+    trigger: 'Cambio de condición, necesidad operativa o licencia.',
+    executiveMessage: 'Se valida la nueva condición antes de liberar la anterior, salvo retiro previo por seguridad debidamente autorizado.',
+    result: 'Nueva condición registrada y licencia anterior tratada según vigencia y reutilización.',
     diagramId: '05',
-    attention: 'La liberación anterior no debe adelantarse a la validación de la nueva condición.',
+    attention: 'Si falla la validación de la nueva condición, la licencia anterior no debe liberarse hasta resolver la incidencia.',
+  },
+  {
+    id: 'suspension',
+    title: 'Suspensión / reactivación',
+    trigger: 'Se requiere suspender temporalmente o reactivar una licencia vigente.',
+    executiveMessage: 'La operación exige causal y autorización; la reactivación además verifica vigencia y alcance habilitado.',
+    result: 'Estado SUSPENDIDA o ASIGNADA registrado con evidencia.',
+    diagramId: '15',
+  },
+  {
+    id: 'lotes',
+    title: 'Carga masiva',
+    trigger: 'Despliegue o lote de usuarios requiere atención coordinada.',
+    executiveMessage: 'Se valida la matriz, se concilia capacidad, se atiende cada fila como una operación individual y se consolidan incidencias y sobrantes.',
+    result: 'Lote conciliado con resultados, pendientes y capacidad controlada.',
+    diagramId: '14',
   },
   {
     id: 'conciliacion',
     title: 'Conciliación',
-    trigger: 'Control periódico o necesidad de comparar reporte contra inventario.',
-    executiveMessage: 'Se contrasta reporte Softplan vs. inventario maestro PJ y se tratan diferencias con evidencia.',
-    result: 'Diferencias cerradas o justificadas, sin correcciones manuales sin sustento.',
+    trigger: 'Control periódico de inventario y capacidad.',
+    executiveMessage: 'Se compara el reporte Softplan contra el inventario maestro PJ, se registran diferencias y solo se cierran cuando existe resolución sustentada.',
+    result: 'Diferencias cerradas o conservadas como pendientes con responsable y plazo.',
     diagramId: '06',
+  },
+  {
+    id: 'contingencia',
+    title: 'Contingencia',
+    trigger: 'La herramienta oficial no está disponible y existe canal alterno habilitado.',
+    executiveMessage: 'Se usa un folio de contingencia, se conserva la trazabilidad de la transmisión y posteriormente se regulariza el ticket oficial.',
+    result: 'Solicitud alterna vinculada al ticket regularizado y a la evidencia original.',
+    diagramId: '17',
   },
 ]
 
 const responsibilityRows = [
-  ['Área usuaria', 'Sustenta necesidad y confirma acceso o resultado.'],
-  ['Instancia de aceptación', 'Confirma aceptación o preaceptación antes de operar.'],
-  ['Gestión de Servicios PJ', 'Registra, clasifica, controla inventario, coordina COM y concilia.'],
-  ['Unidad administrativa PJ', 'Regulariza ampliaciones, facturación, conformidad o pago cuando corresponda.'],
-  ['Softplan', 'Valida tickets, ejecuta operaciones técnicas y entrega evidencia.'],
+  ['Área usuaria', 'Sustenta la necesidad y confirma acceso o resultado cuando corresponde.'],
+  ['Instancia de aceptación PJ', 'Verifica autorización y facultades antes de ejecutar la operación.'],
+  ['Gestión de Servicios PJ', 'Registra, clasifica, controla inventario, reservas, temporalidad, conciliación, ANS y contingencias.'],
+  ['Ejecutor técnico PJ habilitado', 'Ejecuta únicamente las operaciones para las que exista habilitación formal y técnica.'],
+  ['Unidad administrativa PJ', 'Regulariza ampliaciones, sustento, facturación, conformidad y pago según aplique.'],
+  ['Softplan', 'Valida solicitudes, ejecuta operaciones técnicas, registra gestión comercial y entrega evidencia.'],
 ]
 
 const executiveControls = [
-  { title: 'Autorización previa', detail: 'Sin necesidad aceptada no debe ejecutarse una asignación o cambio.' },
-  { title: 'Control de capacidad', detail: 'Distingue disponible, contratado pendiente y ampliación adicional.' },
-  { title: 'Trazabilidad', detail: 'Caso, solicitud, ticket, licencia, evidencia y cierre deben relacionarse.' },
-  { title: 'Cierres separados', detail: 'Resultado técnico, inventario y regularización administrativa no son lo mismo.' },
+  { title: 'Autorización previa', detail: 'La operación no avanza sin respaldo suficiente y facultades aplicables.' },
+  { title: 'Capacidad y reservas', detail: 'Se distingue disponibilidad, reutilización, provisión, ampliación y reserva vigente.' },
+  { title: 'Ejecución habilitada', detail: 'Cada operación se ejecuta solo por el actor formalmente facultado y técnicamente habilitado.' },
+  { title: 'Trazabilidad de estados', detail: 'Caso, solicitud, ticket, licencia, respuesta, estado y evidencia permanecen relacionados.' },
+  { title: 'Seguimiento transversal', detail: 'ANS, temporalidad, reservas, conciliación y contingencias tienen controles específicos.' },
 ]
 
 const indicators = [
-  ['Atención dentro del ANS', 'Mide cumplimiento del plazo aplicable.'],
-  ['Solicitudes observadas', 'Detecta calidad de datos enviados a Softplan.'],
-  ['Inventario actualizado', 'Confirma cierre operativo con evidencia.'],
-  ['Diferencias cerradas', 'Controla conciliación e integridad del inventario.'],
+  ['Atención dentro del ANS', 'Controla tiempo por etapa, pausas admitidas, alertas y escalamiento.'],
+  ['Reservas pendientes', 'Identifica reservas sin ejecución, vencimiento o prórroga justificada.'],
+  ['Licencias temporales', 'Controla términos, bajas programadas y reversiones pendientes.'],
+  ['Diferencias de conciliación', 'Mantiene visibles las diferencias abiertas hasta contar con resolución sustentada.'],
+  ['Contingencias por regularizar', 'Controla folios alternos todavía no vinculados al ticket oficial.'],
 ]
+
+const operationGroups = [
+  { title: 'Alta', items: ['ALTA', 'PROVISIÓN', 'AMPLIACIÓN'], detail: 'Asignación, provisión de capacidad contratada o incremento adicional.' },
+  { title: 'Baja', items: ['BAJA / LIBERACIÓN'], detail: 'Retiro, desasociación o liberación de una licencia.' },
+  { title: 'Modificación', items: ['MODIFICACIÓN', 'LIBERAR_ANTERIOR'], detail: 'Cambio de condición y liberación controlada de la licencia previa.' },
+  { title: 'Conciliación', items: ['REPORTE', 'AJUSTE_INVENTARIO'], detail: 'Solicitud de información, aclaración o corrección de diferencias.' },
+]
+
+const licenseStateDetails: Record<string, string> = {
+  DISPONIBLE: 'Licencia vigente y reutilizable, sin una asignación que impida atender una nueva necesidad.',
+  RESERVADA: 'Licencia apartada temporalmente para una solicitud pendiente de ejecución o confirmación.',
+  ASIGNADA: 'Asignación confirmada y vinculada al usuario o recurso correspondiente.',
+  LIBERADA: 'Desasociación confirmada; todavía debe verificarse si queda disponible, vencida o cancelada.',
+  SUSPENDIDA: 'Uso temporalmente suspendido, conservando la trazabilidad de la asignación y su causal.',
+  VENCIDA: 'La vigencia terminó y la licencia no puede considerarse disponible para una nueva asignación.',
+  CANCELADA: 'El derecho o capacidad fue cancelado y no puede reutilizarse.',
+}
 
 export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: ExecutivePresentationProps) {
   const [activeStep, setActiveStep] = useState(journey[0])
   const [activeScenario, setActiveScenario] = useState(scenarios[0])
+  const [activeSummaryPanel, setActiveSummaryPanel] = useState<SummaryPanel | null>(null)
+  const toggleSummaryPanel = (panel: SummaryPanel) => setActiveSummaryPanel((current) => current === panel ? null : panel)
   const activeStepDiagramId = activeStep.diagramId
 
   return (
     <section className="executive-page">
       <div className="executive-hero">
         <div className="executive-hero-copy">
-          <span className="eyebrow">Vista general · Base estable v1.0</span>
+          <span className="eyebrow">Vista gerencial · BPMN actualizado v0.6</span>
           <h1>Gestión integral de licencias STEJENP</h1>
           <p>
-            Lectura compacta del procedimiento para entender responsabilidades, controles, escenarios operativos y puntos de decisión desde el inicio.
+            Lectura ejecutiva del procedimiento actualizado para entender decisiones, responsables, escenarios, controles transversales y trazabilidad sin recorrer todos los diagramas operativos.
           </p>
           <div className="executive-actions">
             <button className="primary-action" onClick={() => onOpenDiagram('n0')}><Workflow size={17} /> Ver BPMN integral</button>
@@ -167,12 +225,96 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           </div>
         </div>
         <div className="executive-scoreboard">
-          <div><strong>5</strong><span>operaciones controladas</span></div>
-          <div><strong>6</strong><span>estados de licencia</span></div>
-          <div><strong>12</strong><span>diagramas vinculados</span></div>
-          <div><strong>4</strong><span>controles críticos</span></div>
+          <button type="button" className={activeSummaryPanel === 'operations' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('operations')} aria-expanded={activeSummaryPanel === 'operations'} aria-controls="executive-summary-panel">
+            <strong>{procedure.operationTypes.length}</strong><span>códigos de operación</span><ChevronDown className="scoreboard-chevron" size={18} />
+          </button>
+          <button type="button" className={activeSummaryPanel === 'states' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('states')} aria-expanded={activeSummaryPanel === 'states'} aria-controls="executive-summary-panel">
+            <strong>{procedure.states.length}</strong><span>estados de licencia</span><ChevronDown className="scoreboard-chevron" size={18} />
+          </button>
+          <button type="button" className={activeSummaryPanel === 'diagrams' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('diagrams')} aria-expanded={activeSummaryPanel === 'diagrams'} aria-controls="executive-summary-panel">
+            <strong>{diagrams.length}</strong><span>diagramas vinculados</span><ChevronDown className="scoreboard-chevron" size={18} />
+          </button>
+          <button type="button" className={activeSummaryPanel === 'controls' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('controls')} aria-expanded={activeSummaryPanel === 'controls'} aria-controls="executive-summary-panel">
+            <strong>{executiveControls.length}</strong><span>controles transversales</span><ChevronDown className="scoreboard-chevron" size={18} />
+          </button>
         </div>
       </div>
+
+      {activeSummaryPanel && (
+        <article id="executive-summary-panel" className="summary-detail-panel">
+          {activeSummaryPanel === 'operations' && (
+            <>
+              <div className="summary-panel-heading">
+                <Database size={19} />
+                <div><h2>Mapa de códigos de operación</h2><p>Relación entre los escenarios del procedimiento y las operaciones técnicas que viajan en la solicitud PJ ↔ Softplan.</p></div>
+              </div>
+              <div className="summary-panel-grid four-columns">
+                {operationGroups.map((group) => (
+                  <div key={group.title} className="summary-panel-card">
+                    <strong>{group.title}</strong>
+                    <div className="summary-tags">{group.items.map((item) => <span key={item}>{item}</span>)}</div>
+                    <p>{group.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeSummaryPanel === 'states' && (
+            <>
+              <div className="summary-panel-heading">
+                <Database size={19} />
+                <div><h2>Estados de licencia</h2><p>Estados de control utilizados para conocer la condición real de cada licencia durante su ciclo de vida.</p></div>
+              </div>
+              <div className="summary-panel-grid state-grid">
+                {procedure.states.map((state) => (
+                  <div key={state} className="summary-panel-card">
+                    <strong>{state}</strong>
+                    <p>{licenseStateDetails[state] ?? 'Estado de control definido por el procedimiento.'}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeSummaryPanel === 'diagrams' && (
+            <>
+              <div className="summary-panel-heading">
+                <Layers3 size={19} />
+                <div><h2>Diagramas vinculados</h2><p>Navega directamente por los niveles N0, N1 y N2 del procedimiento.</p></div>
+              </div>
+              <div className="diagram-summary-grid">
+                {(['N0', 'N1', 'N2'] as const).map((level) => (
+                  <div key={level} className="diagram-summary-group">
+                    <strong>{level}</strong><span>{diagrams.filter((diagram) => diagram.level === level).length} diagramas</span>
+                    <div>
+                      {diagrams.filter((diagram) => diagram.level === level).map((diagram) => (
+                        <button key={diagram.id} type="button" onClick={() => onOpenDiagram(diagram.id)}>{diagram.shortTitle}<ArrowRight size={13} /></button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeSummaryPanel === 'controls' && (
+            <>
+              <div className="summary-panel-heading">
+                <ClipboardCheck size={19} />
+                <div><h2>Controles transversales</h2><p>Controles que aplican a lo largo del procedimiento y no dependen de una sola operación.</p></div>
+              </div>
+              <div className="summary-panel-grid controls-grid">
+                {executiveControls.map((control) => (
+                  <div key={control.title} className="summary-panel-card control-summary-card">
+                    <CheckCircle2 size={16} /><div><strong>{control.title}</strong><p>{control.detail}</p></div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </article>
+      )}
 
       <div className="executive-grid">
         <article className="executive-card executive-card-wide">
@@ -186,7 +328,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           <div className="executive-message-strip">
             <div><ShieldCheck size={18} /><strong>PJ decide y valida</strong><span>autoriza, inventaria y confirma resultado</span></div>
             <ArrowRight size={18} />
-            <div><Zap size={18} /><strong>Softplan ejecuta</strong><span>valida solicitud, opera técnicamente y entrega evidencia</span></div>
+            <div><Zap size={18} /><strong>Ejecución controlada</strong><span>PJ habilitado o Softplan ejecutan según facultad y operación</span></div>
             <ArrowRight size={18} />
             <div><Database size={18} /><strong>Inventario gobierna</strong><span>evita duplicidad, sobreuso y cierres sin sustento</span></div>
           </div>
@@ -197,7 +339,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
             <GitBranch size={20} />
             <div>
               <h2>Recorrido del proceso</h2>
-              <p>Seis pasos de control. Selecciona uno para ver decisión, actor y salida esperada.</p>
+              <p>Siete pasos de control. Selecciona uno para ver actor, decisión y salida esperada.</p>
             </div>
           </div>
           <div className="journey-layout">
