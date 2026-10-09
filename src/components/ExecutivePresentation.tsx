@@ -214,11 +214,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
     <section className="executive-page">
       <div className="executive-hero">
         <div className="executive-hero-copy">
-<<<<<<< HEAD
           <span className="eyebrow">Vista gerencial · BPMN actualizado v0.6</span>
-=======
-          <span className="eyebrow">Vista gerencial · BPMN actualizado </span>
->>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
           <h1>Gestión integral de licencias STEJENP</h1>
           <p>
             Lectura ejecutiva del procedimiento actualizado para entender decisiones, responsables, escenarios, controles transversales y trazabilidad sin recorrer todos los diagramas operativos.
@@ -229,7 +225,6 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           </div>
         </div>
         <div className="executive-scoreboard">
-<<<<<<< HEAD
           <button type="button" className={activeSummaryPanel === 'operations' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('operations')} aria-expanded={activeSummaryPanel === 'operations'} aria-controls="executive-summary-panel">
             <strong>{procedure.operationTypes.length}</strong><span>códigos de operación</span><ChevronDown className="scoreboard-chevron" size={18} />
           </button>
@@ -242,12 +237,6 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           <button type="button" className={activeSummaryPanel === 'controls' ? 'scoreboard-action active' : 'scoreboard-action'} onClick={() => toggleSummaryPanel('controls')} aria-expanded={activeSummaryPanel === 'controls'} aria-controls="executive-summary-panel">
             <strong>{executiveControls.length}</strong><span>controles transversales</span><ChevronDown className="scoreboard-chevron" size={18} />
           </button>
-=======
-          <div><strong>{procedure.operationTypes.length}</strong><span>tipos de operación</span></div>
-          <div><strong>{procedure.states.length}</strong><span>estados de licencia</span></div>
-          <div><strong>{diagrams.length}</strong><span>diagramas vinculados</span></div>
-          <div><strong>{executiveControls.length}</strong><span>controles transversales</span></div>
->>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
         </div>
       </div>
 
@@ -442,13 +431,13 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           </div>
         </article>
 
-        {/*<article className="executive-card">
+        <article className="executive-card">
           <div className="executive-card-heading"><RefreshCcw size={20} /><div><h2>Pendientes de formalización</h2><p>Temas que requieren decisión antes de versión operativa.</p></div></div>
           <div className="pending-mini-list">
             {pendingScenarios.slice(0, 3).map((item) => <div key={item.title}><AlertTriangle size={15} /><span>{item.title}</span></div>)}
           </div>
           <button className="link-action" onClick={onOpenPending}>Revisar todos <ArrowRight size={15} /></button>
-        </article>*/}
+        </article>
       </div>
 
       <div className="executive-footer-note">

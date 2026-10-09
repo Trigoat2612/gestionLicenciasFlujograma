@@ -2,11 +2,7 @@
 
 Versión **2.2.0** de la presentación web gerencial/operativa del procedimiento de gestión de licencias STEJENP.
 
-<<<<<<< HEAD
 ## Cambios de v2.2.1
-=======
-## Cambios de v2.2.0
->>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
 
 ### Visor BPMN
 
@@ -62,7 +58,6 @@ Los diagramas están en `src/bpmn/`. Si se reemplaza un BPMN manteniendo su clav
 - `src/data/catalog.ts`: catálogo de diagramas y asociaciones entre niveles.
 - `src/data/procedure.ts`: contenido resumido, referencias complementarias y temas por formalizar.
 - `src/bpmn/`: fuentes BPMN.
-<<<<<<< HEAD
 
 
 ## v2.2.1 · Operation Map Panel
@@ -75,5 +70,3 @@ Se agregó el panel desplegable **Mapa de códigos de operación** en la cabecer
 - El panel expandido se alinea al mismo ancho de la vista gerencial y de los demás paneles.
 - Cada tarjeta muestra un chevron para indicar que puede abrir/cerrar su detalle.
 - Solo un resumen permanece abierto a la vez para conservar una lectura compacta.
-=======
->>>>>>> c8f4f3b0b54dd2f8fcc4bc3182ee0ae767177f94
