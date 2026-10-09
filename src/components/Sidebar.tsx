@@ -19,7 +19,7 @@ export function Sidebar({
         <span className="brand-icon"><Layers3 size={19} /></span>
         <div>
           <strong>Mapa del procedimiento</strong>
-          <span>12 diagramas relacionados</span>
+          <span>{diagrams.length} diagramas relacionados</span>
         </div>
         <button className="sidebar-close" onClick={onClose} aria-label="Cerrar navegación">×</button>
       </div>

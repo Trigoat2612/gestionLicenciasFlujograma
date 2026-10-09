@@ -41,7 +41,7 @@ function buildSwimlaneHeader(
   const header = document.createElement('div')
   header.className = type === 'participant' ? 'bpmn-participant-header' : 'bpmn-lane-header'
   header.style.height = `${Math.max(30, height - 2)}px`
-  header.style.width = `${type === 'participant' ? SWIMLANE_LAYOUT.participantHeaderWidth + 8 : SWIMLANE_LAYOUT.laneHeaderWidth - 3}px`
+  header.style.width = `${type === 'participant' ? SWIMLANE_LAYOUT.participantHeaderWidth - 1 : SWIMLANE_LAYOUT.laneHeaderWidth - 1}px`
   header.title = name
 
   const label = document.createElement('span')

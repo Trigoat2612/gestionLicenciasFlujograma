@@ -202,6 +202,14 @@ button { color: inherit; }
 .pending-number { position: absolute; right: 14px; top: 8px; font-size: 44px; font-weight: 900; color: rgba(172,114,28,.09); }
 .pending-card h2 { margin: 12px 0 7px; font-size: 16px; color: #674817; }
 .pending-card p { margin: 0; color: #775f39; font-size: 12px; line-height: 1.55; }
+.pending-grid-detailed { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pending-card-detailed { min-height: 0; }
+.pending-solution { margin-top: 14px; padding: 11px 12px; border: 1px solid #e7d2aa; border-radius: 9px; background: rgba(255,255,255,.58); }
+.pending-solution strong, .pending-solution span { display: block; }
+.pending-solution strong { color: #6f4c14; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+.pending-solution span { margin-top: 5px; color: #654f2f; font-size: 12px; line-height: 1.5; }
+.pending-steps { margin: 13px 0 0; padding-left: 22px; color: #665337; }
+.pending-steps li { padding-left: 3px; margin: 6px 0; font-size: 11.5px; line-height: 1.45; }
 
 @media (max-width: 1180px) {
   .sidebar { width: 260px; flex-basis: 260px; }

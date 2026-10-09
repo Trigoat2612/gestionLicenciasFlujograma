@@ -137,7 +137,7 @@ function App() {
         <div className="top-actions">
           <div className="search-box">
             <Search size={17} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar AL06, MO09, Softplan…" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar AL06, SU02, AN04, Softplan…" />
             {query && <button onClick={() => setQuery('')} aria-label="Limpiar búsqueda"><X size={15} /></button>}
             {query && (
               <div className="search-results">
@@ -208,7 +208,7 @@ function App() {
                   <button className="primary-action" onClick={() => navigate('n0', false)}><Workflow size={17} /> Explorar flujo integral</button>
                 </div>
                 <div className="hero-stats">
-                  <div><strong>12</strong><span>diagramas</span></div>
+                  <div><strong>{diagrams.length}</strong><span>diagramas</span></div>
                   <div><strong>{totalActivities}</strong><span>actividades</span></div>
                   <div><strong>{totalRoles}</strong><span>roles/carriles</span></div>
                 </div>
@@ -265,13 +265,20 @@ function App() {
                 <h1>Aspectos pendientes de formalización</h1>
                 <p>El procedimiento identifica estos puntos antes de aprobar la versión operativa. Se muestran aparte para no confundir el flujo vigente con decisiones todavía abiertas.</p>
               </div>
-              <div className="pending-grid">
+              <div className="pending-grid pending-grid-detailed">
                 {pendingScenarios.map((scenario, index) => (
-                  <article className="pending-card" key={scenario.title}>
+                  <article className="pending-card pending-card-detailed" key={scenario.title}>
                     <span className="pending-number">{String(index + 1).padStart(2, '0')}</span>
                     <AlertTriangle size={20} />
                     <h2>{scenario.title}</h2>
                     <p>{scenario.detail}</p>
+                    <div className="pending-solution">
+                      <strong>Solución propuesta</strong>
+                      <span>{scenario.solution}</span>
+                    </div>
+                    <ol className="pending-steps">
+                      {scenario.steps.map((step) => <li key={step}>{step}</li>)}
+                    </ol>
                   </article>
                 ))}
               </div>
