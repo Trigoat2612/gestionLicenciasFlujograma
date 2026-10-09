@@ -193,7 +193,7 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
     <section className="executive-page">
       <div className="executive-hero">
         <div className="executive-hero-copy">
-          <span className="eyebrow">Vista gerencial · BPMN actualizado v0.6</span>
+          <span className="eyebrow">Vista gerencial · BPMN actualizado </span>
           <h1>Gestión integral de licencias STEJENP</h1>
           <p>
             Lectura ejecutiva del procedimiento actualizado para entender decisiones, responsables, escenarios, controles transversales y trazabilidad sin recorrer todos los diagramas operativos.
@@ -326,13 +326,13 @@ export function ExecutivePresentation({ onOpenDiagram, onOpenPending }: Executiv
           </div>
         </article>
 
-        <article className="executive-card">
+        {/*<article className="executive-card">
           <div className="executive-card-heading"><RefreshCcw size={20} /><div><h2>Pendientes de formalización</h2><p>Temas que requieren decisión antes de versión operativa.</p></div></div>
           <div className="pending-mini-list">
             {pendingScenarios.slice(0, 3).map((item) => <div key={item.title}><AlertTriangle size={15} /><span>{item.title}</span></div>)}
           </div>
           <button className="link-action" onClick={onOpenPending}>Revisar todos <ArrowRight size={15} /></button>
-        </article>
+        </article>*/}
       </div>
 
       <div className="executive-footer-note">
